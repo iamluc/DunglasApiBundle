@@ -112,7 +112,11 @@ class ItemNormalizer extends AbstractNormalizer
 
         $data = [];
         if (!isset($context['json_ld_has_context'])) {
-            $data['@context'] = $this->contextBuilder->getContextUri($resource);
+            if (isset($context['json_ld_context_embedded'])) {
+                $data['@context'] = $this->contextBuilder->getContext($resource);
+            } else {
+                $data['@context'] = $this->contextBuilder->getContextUri($resource);
+            }
         }
 
         $context = $this->createContext($resource, $context);

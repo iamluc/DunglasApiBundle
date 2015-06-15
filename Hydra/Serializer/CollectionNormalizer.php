@@ -88,10 +88,15 @@ class CollectionNormalizer extends SerializerAwareNormalizer implements Normaliz
         } else {
             $context = $this->createContext($resource, $context);
 
-            $data = [
-                '@context' => $this->contextBuilder->getContextUri($resource),
-                '@id' => $context['request_uri'],
-            ];
+            $data = [];
+            if (isset($context['json_ld_context_embedded'])) {
+                $data['@context'] = $this->contextBuilder->getContext($resource);
+            } else {
+                $data['@context'] = $this->contextBuilder->getContextUri($resource);
+            }
+
+            $data['@id'] = $context['request_uri'];
+
             list($parts, $parameters) = $this->parseRequestUri($context['request_uri']);
 
             if ($object instanceof PaginatorInterface) {
