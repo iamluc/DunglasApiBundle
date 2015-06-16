@@ -14,6 +14,7 @@ namespace Dunglas\ApiBundle\JsonLd;
 use Dunglas\ApiBundle\Api\ResourceCollectionInterface;
 use Dunglas\ApiBundle\Api\ResourceInterface;
 use Dunglas\ApiBundle\Mapping\ClassMetadataFactoryInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 
@@ -35,6 +36,10 @@ class ContextBuilder
      */
     private $router;
     /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+    /**
      * @var ClassMetadataFactoryInterface
      */
     private $classMetadataFactory;
@@ -49,11 +54,13 @@ class ContextBuilder
 
     public function __construct(
         RouterInterface $router,
+        EventDispatcherInterface $eventDispatcher,
         ClassMetadataFactoryInterface $classMetadataFactory,
         ResourceCollectionInterface $resourceCollection,
         NameConverterInterface $nameConverter = null
     ) {
         $this->router = $router;
+        $this->eventDispatcher = $eventDispatcher;
         $this->classMetadataFactory = $classMetadataFactory;
         $this->resourceCollection = $resourceCollection;
         $this->nameConverter = $nameConverter;
@@ -119,7 +126,11 @@ class ContextBuilder
             }
         }
 
-        return $context;
+        // Dispatch event to allow context customization
+        $event = new Event\ContextBuilderEvent($context);
+        $this->eventDispatcher->dispatch(Event\Events::CONTEXT_BUILDER, $event);
+
+        return $event->getContext();
     }
 
     /**
